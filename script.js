@@ -19,15 +19,12 @@ window.addEventListener('DOMContentLoaded', function () {
     // Create a light
     let light = new BABYLON.HemisphericLight(
         "light", new BABYLON.Vector3(0, 10, 0), scene);
-
-    // Create a cube with Action Manager
-    let cube = createCube(scene);
-
+    
     // Create GUI
     var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
     //Create a TextBlock
-    var textBlock = createTextBlock(
+    let textBlock = createTextBlock(
         "Extrusion Distance: 0", 
         BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT, 
         BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM
@@ -35,14 +32,14 @@ window.addEventListener('DOMContentLoaded', function () {
     advancedTexture.addControl(textBlock);
 
     // Create a Reset Button
-    var resetButton = createButton(
+    let resetButton = createButton(
         "reset-button", 
         "Reset", 
         BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT, 
         BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP
     );
 
-    // Create an Extrusion Button
+    //Create an Extrusion Button
     var extrusionButon = createButton(
         "extrusion-button", 
         "Perform Extrusion", 
@@ -50,75 +47,83 @@ window.addEventListener('DOMContentLoaded', function () {
         BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER,
         "20%"
     );
+    //advancedTexture.addControl(extrusionButon); //Disabled for now
 
-    //Create a Gizmo
-    let gizmo = new BABYLON.BoundingBoxGizmo(BABYLON.Color3.FromHexString("#0984e3"));
-    gizmo.attachedMesh = null;
-
-    //Attach action to cube
-    cube.actionManager.registerAction(
-        new BABYLON.ExecuteCodeAction(
-            BABYLON.ActionManager.OnDoublePickTrigger,
-             () => gizmo.attachedMesh = cube
-        )
-    );
-    
-    
-    //To remove gizmo clicking elsewhere
-    scene.onPointerObservable.add((p)=>{
-        if(p.type === BABYLON.PointerEventTypes.POINTERDOWN){
-            gizmo.attachedMesh = null;
-        }
-    })
-    
-    // Clip initial position of Cube
+    //init variables
+    let cube = null;
+    let gizmo = null;
     let initialPosition = null;
-    gizmo.onDragStartObservable.add( () => {
-        initialPosition = Object.values(cube.position).slice(1);
-    })
+    let pickedFace = null;
+    
+    //Required for Reset
+    const init = () => {
+        // Create a cube with Action Manager
+        cube = createCube(scene);
+        
+        //Create a Gizmo
+        gizmo = new BABYLON.BoundingBoxGizmo(BABYLON.Color3.FromHexString("#0984e3"));
+        gizmo.attachedMesh = null;
+        
+        //Attach action to cube
+        cube.actionManager.registerAction(
+            new BABYLON.ExecuteCodeAction(
+                BABYLON.ActionManager.OnDoublePickTrigger,
+                () => gizmo.attachedMesh = cube
+            )
+        );
+        
+        //To remove gizmo clicking elsewhere
+        scene.onPointerObservable.add((p)=>{
+            if(p.type === BABYLON.PointerEventTypes.POINTERDOWN){
+                gizmo.attachedMesh = null;
+            }
+        })
 
-    // Calculate Extrusion length and display it
-    gizmo.onScaleBoxDragObservable.add( () => {
-        let currentPosition = Object.values(cube.position).slice(1);
-        textBlock.text = "Extrusion Distance: " + calculateExtrusionDistance(initialPosition, currentPosition);
-    });
+        // Callback to clip initial position of the cube
+        gizmo.onDragStartObservable.add( () => {
+            initialPosition = Object.values(cube.position).slice(1);
+        })
+
+        // Calculate Extrusion length and display it
+        gizmo.onScaleBoxDragObservable.add( () => {
+            let currentPosition = Object.values(cube.position).slice(1);
+            textBlock.text = "Extrusion Distance: " + calculateExtrusionDistance( initialPosition, currentPosition);
+        });
+
+
+        //Manual Extrusion without Gizmo
+        scene.onPointerUp = (evt, pickingInfo)  => { 
+            if(pickingInfo.hit){
+                pickedFace = Math.floor(pickingInfo.faceId/2);
+            }
+        }
+
+        // Define Extrusion button actions
+        extrusionButon.onPointerUpObservable.add( () => {
+            if(pickedFace != null){
+                cube = performExtrusion(cube, pickedFace, 1);
+                gizmo.dispose();
+                gizmo = new BABYLON.BoundingBoxGizmo(BABYLON.Color3.FromHexString("#0984e3"));
+                gizmo.attachedMesh = null;
+            }
+            
+        });
+    }    
 
     // Define reset button actions
     resetButton.onPointerUpObservable.add( () => {
         textBlock.text = "Extrusion Distance: 0";
         gizmo.dispose();
         cube.dispose();
-        cube = createCube(scene);
-        gizmo = new BABYLON.BoundingBoxGizmo(BABYLON.Color3.FromHexString("#0984e3"));
-        gizmo.attachedMesh = null;
-        cube.actionManager.registerAction(
-            new BABYLON.ExecuteCodeAction(
-                BABYLON.ActionManager.OnDoublePickTrigger, 
-                () => gizmo.attachedMesh = cube
-            )
-        );
-        gizmo.onScaleBoxDragObservable.add( () => {
-            let currentPosition = Object.values(cube.position).slice(1);
-            textBlock.text = "Extrusion Distance: " + calculateExtrusionDistance(initialPosition, currentPosition);
-        });
+        pickedFace = null;
+        init();
     });
     advancedTexture.addControl(resetButton);
 
-    /* Extrusion By providiing Length - Disabled for now
-    let pickedFace = null;
-    scene.onPointerUp = (evt, pickingInfo)  => { 
-        if(pickingInfo.hit){
-            pickedFace = Math.floor(pickingInfo.faceId/2);
-        }
-    }
-
-    // Define Extrusion button actions
-    extrusionButon.onPointerUpObservable.add( () => {
-        cube = performExtrusion(cube, pickedFace, 1);
-    });
-    //advancedTexture.addControl(extrusionButon); //Disabled for now
-    */
     
+    //Initialization at start
+    init();
+
     // Run the render loop
     engine.runRenderLoop(function () {
         scene.render();
