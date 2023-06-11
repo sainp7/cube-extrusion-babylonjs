@@ -42,7 +42,7 @@ window.addEventListener('DOMContentLoaded', function () {
         BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP
     );
 
-    // Create a Extrusion Button
+    // Create an Extrusion Button
     var extrusionButon = createButton(
         "extrusion-button", 
         "Perform Extrusion", 
@@ -63,12 +63,6 @@ window.addEventListener('DOMContentLoaded', function () {
         )
     );
     
-    let pickedFace = null;
-    scene.onPointerUp = (evt, pickingInfo)  => { 
-        if(pickingInfo.hit){
-            pickedFace = Math.floor(pickingInfo.faceId/2);
-        }
-    }
     
     //To remove gizmo clicking elsewhere
     scene.onPointerObservable.add((p)=>{
@@ -86,7 +80,7 @@ window.addEventListener('DOMContentLoaded', function () {
     // Calculate Extrusion length and display it
     gizmo.onScaleBoxDragObservable.add( () => {
         let currentPosition = Object.values(cube.position).slice(1);
-        textBlock.text = calculateExtrusionDistance(initialPosition, currentPosition);
+        textBlock.text = "Extrusion Distance: " + calculateExtrusionDistance(initialPosition, currentPosition);
     });
 
     // Define reset button actions
@@ -103,14 +97,27 @@ window.addEventListener('DOMContentLoaded', function () {
                 () => gizmo.attachedMesh = cube
             )
         );
+        gizmo.onScaleBoxDragObservable.add( () => {
+            let currentPosition = Object.values(cube.position).slice(1);
+            textBlock.text = "Extrusion Distance: " + calculateExtrusionDistance(initialPosition, currentPosition);
+        });
     });
     advancedTexture.addControl(resetButton);
+
+    /* Extrusion By providiing Length - Disabled for now
+    let pickedFace = null;
+    scene.onPointerUp = (evt, pickingInfo)  => { 
+        if(pickingInfo.hit){
+            pickedFace = Math.floor(pickingInfo.faceId/2);
+        }
+    }
 
     // Define Extrusion button actions
     extrusionButon.onPointerUpObservable.add( () => {
         cube = performExtrusion(cube, pickedFace, 1);
     });
     //advancedTexture.addControl(extrusionButon); //Disabled for now
+    */
     
     // Run the render loop
     engine.runRenderLoop(function () {
