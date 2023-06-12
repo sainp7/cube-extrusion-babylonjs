@@ -1,6 +1,6 @@
 /// <reference path='./vendor/babylon.d.ts' />
 
-import {createCube ,createButton, createTextBlock, calculateExtrusionDistance, performExtrusion} from './helper.js';
+import {createCube ,createButton, createTextBlock, computeNormalInCameraSpace, computeExtrusionLength, performExtrusion} from './helper.js';
 
 window.addEventListener('DOMContentLoaded', function () {
     let canvas = document.getElementById("renderCanvas");
@@ -29,33 +29,43 @@ window.addEventListener('DOMContentLoaded', function () {
     let cube = null;
     let initialPosition = null;
     let pickedFace = null;
-    let pointerDown = false;
-    
+    let initialPointerX = null;
+    let initialPointerY = null;
+    let initialVertices = null;
+    let cameraSpaceNormal = null;
     const init = () => {
         cube = createCube(scene);
-
 
         scene.onPointerDown = (evt, pickingInfo) => {
             if(pickingInfo.hit) {
                 pickedFace = Math.floor(pickingInfo.faceId/2);
                 initialPosition = cube.position;
-                console.log(initialPosition);
+                camera.detachControl(canvas);
+                initialPointerX = scene.pointerX;
+                initialPointerY = scene.pointerY;
+                initialVertices = cube.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+                cameraSpaceNormal = computeNormalInCameraSpace(initialVertices, pickedFace, camera);
             }
         }
 
         scene.onPointerMove = (evt, pickingInfo) =>{
             if(pickedFace != null){
-                console.log(scene.pointerX);
-                console.log(scene.pointerY);
+                let extrusionLength =  computeExtrusionLength(initialPointerX, scene.pointerX, 
+                    initialPointerY, scene.pointerY, cameraSpaceNormal, pickedFace);
+                performExtrusion(cube, initialVertices, pickedFace, extrusionLength);
             }
         }
 
         scene.onPointerUp = () => {
             pickedFace = null;
             initialPosition = null;
+            camera.attachControl(canvas);
+            initialPointerX = null;
+            initialPointerY = null;
+            cameraSpaceNormal = null;
+            initialVertices = null;
         }
  
-
     }    
  
     resetButton.onPointerUpObservable.add( () => {
