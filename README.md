@@ -1,5 +1,5 @@
 # cube-extrusion-babylonjs
-### Implementaion of Cube Extrusion in babylon-js
+### Implementaion of Cube Extrusion in babylonjs
 Cube Extrusion: The process of scaling a cube by pulling out or pushing in one of it's face along it's normal to alter the structure of that cube.
 
 Implementations: 
@@ -18,4 +18,4 @@ Code Explanation:
 4. Add a callback function on gizmo for when we just start dragging gizmo to save the initial position of the cube. And, add another callback function on gizmo for when the scaleBox is dragged to fetch the current position of cube (as gizmo is dragged) Use it to calculate the extrusion length and display it by changing Text of Text Block. Extrusion length is twice the length of displacement of center of cube (midpoint theorem).
 5. Add a callback function for reset button to dispose cube and gizmo, reset the text of text block, and call init.
 
-See it live: https://www.babylonjs-playground.com/#HV8MD9
+See it live: [babylonjs-playground](https://www.babylonjs-playground.com/#HV8MD9#1)
