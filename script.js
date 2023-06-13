@@ -33,10 +33,12 @@ window.addEventListener('DOMContentLoaded', function () {
     let initialVertices = null;
     let cameraSpaceNormal = null;
     let distanceBetweenOppositeFaces = null;
+    let currentVertexData = null;
     const init = () => {
         cube = createCube(scene);
-
+        
         scene.onPointerDown = (evt, pickingInfo) => {
+            console.log(pickingInfo.hit);
             if(pickingInfo.hit) {
                 pickedFace = Math.floor(pickingInfo.faceId/2);
                 camera.detachControl(canvas);
@@ -47,26 +49,27 @@ window.addEventListener('DOMContentLoaded', function () {
                 distanceBetweenOppositeFaces  = calculateDistanceBetweenOppositeFaces(Math.floor(pickedFace/2), initialVertices);
             }
         }
-
-        scene.onPointerMove = (evt, pickingInfo) =>{
+        
+        scene.onPointerMove = () =>{
             if(pickedFace != null){
                 let extrusionLength =  computeExtrusionLength(initialPointerX, scene.pointerX, 
                     initialPointerY, scene.pointerY, cameraSpaceNormal);
-                performExtrusion(cube, initialVertices, pickedFace, extrusionLength, distanceBetweenOppositeFaces);
+                currentVertexData = performExtrusion(cube, initialVertices, pickedFace, extrusionLength, distanceBetweenOppositeFaces);
                 textBlock.text= "Extrusion Length: " + extrusionLength;
             }
         }
-
+        
         scene.onPointerUp = () => {
-            pickedFace = null;
-            camera.attachControl(canvas);
-            initialPointerX = null;
-            initialPointerY = null;
-            cameraSpaceNormal = null;
-            initialVertices = null;
-            distanceBetweenOppositeFaces = null
+            if(pickedFace != null){
+                pickedFace = null;
+                camera.attachControl(canvas);
+                initialPointerX = null;
+                initialPointerY = null;
+                cameraSpaceNormal = null;
+                initialVertices = null;
+                distanceBetweenOppositeFaces = null;
+            }
         }
- 
     }    
  
     resetButton.onPointerUpObservable.add( () => {
