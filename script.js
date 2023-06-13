@@ -1,6 +1,6 @@
 /// <reference path='./vendor/babylon.d.ts' />
 
-import {createCube ,createButton, createTextBlock, computeNormalInCameraSpace, computeExtrusionLength, performExtrusion} from './helper.js';
+import {createCube ,createButton, createTextBlock, computeNormalInCameraSpace, computeExtrusionLength, calculateDistanceBetweenOppositeFaces, performExtrusion} from './helper.js';
 
 window.addEventListener('DOMContentLoaded', function () {
     let canvas = document.getElementById("renderCanvas");
@@ -13,7 +13,7 @@ window.addEventListener('DOMContentLoaded', function () {
     let advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
     let textBlock = createTextBlock(
-        "Extrusion Distance: 0", 
+        "Extrusion Length: 0", 
         BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT, 
         BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM
     );
@@ -27,24 +27,24 @@ window.addEventListener('DOMContentLoaded', function () {
     );
 
     let cube = null;
-    let initialPosition = null;
     let pickedFace = null;
     let initialPointerX = null;
     let initialPointerY = null;
     let initialVertices = null;
     let cameraSpaceNormal = null;
+    let distanceBetweenOppositeFaces = null;
     const init = () => {
         cube = createCube(scene);
 
         scene.onPointerDown = (evt, pickingInfo) => {
             if(pickingInfo.hit) {
                 pickedFace = Math.floor(pickingInfo.faceId/2);
-                initialPosition = cube.position;
                 camera.detachControl(canvas);
                 initialPointerX = scene.pointerX;
                 initialPointerY = scene.pointerY;
                 initialVertices = cube.getVerticesData(BABYLON.VertexBuffer.PositionKind);
                 cameraSpaceNormal = computeNormalInCameraSpace(initialVertices, pickedFace, camera);
+                distanceBetweenOppositeFaces  = calculateDistanceBetweenOppositeFaces(Math.floor(pickedFace/2), initialVertices);
             }
         }
 
@@ -52,24 +52,25 @@ window.addEventListener('DOMContentLoaded', function () {
             if(pickedFace != null){
                 let extrusionLength =  computeExtrusionLength(initialPointerX, scene.pointerX, 
                     initialPointerY, scene.pointerY, cameraSpaceNormal, pickedFace);
-                performExtrusion(cube, initialVertices, pickedFace, extrusionLength);
+                performExtrusion(cube, initialVertices, pickedFace, extrusionLength, distanceBetweenOppositeFaces);
+                textBlock.text= "Extrusion Length: " + extrusionLength;
             }
         }
 
         scene.onPointerUp = () => {
             pickedFace = null;
-            initialPosition = null;
             camera.attachControl(canvas);
             initialPointerX = null;
             initialPointerY = null;
             cameraSpaceNormal = null;
             initialVertices = null;
+            distanceBetweenOppositeFaces = null
         }
  
     }    
  
     resetButton.onPointerUpObservable.add( () => {
-        textBlock.text = "Extrusion Distance: 0";
+        textBlock.text = "Extrusion Length: 0";
         cube.dispose();
         pickedFace = null;
         init();

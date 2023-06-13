@@ -46,6 +46,8 @@ const computeNormalInCameraSpace = (initialVertices, pickedFace, camera) => {
     let v3 = BABYLON.Vector3.FromArray(faceVertices, 6);
     let faceNormal = BABYLON.Vector3.Cross(v2.subtract(v1), v3.subtract(v1));
     let cameraSpaceNormal = BABYLON.Vector3.TransformNormal(faceNormal, camera.getWorldMatrix().invert());
+    cameraSpaceNormal._x = Math.abs(cameraSpaceNormal._x) > 0.2 ? (-1) * cameraSpaceNormal._x : 0;
+    cameraSpaceNormal._y = Math.abs(cameraSpaceNormal._y) > 0.2 ? cameraSpaceNormal._y : 0;
     return cameraSpaceNormal;
 }
 
@@ -53,20 +55,39 @@ const computeExtrusionLength = (initialPointerX, currentPointerX, initialPointer
     let deltaPointerX = (initialPointerX - currentPointerX) * 0.01;
     let deltaPointerY = (initialPointerY - currentPointerY) * 0.01;
     let extrusionLength = (deltaPointerX * cameraSpaceNormal._x + deltaPointerY * cameraSpaceNormal._y);
-    if( pickedFace === 1 || pickedFace === 3 || pickedFace === 4){
-        extrusionLength *= -1;
+    if( pickedFace === 0 || pickedFace === 2 || pickedFace === 4){
+         extrusionLength *= -1;
     }
     return extrusionLength;
 }
 
-const performExtrusion  = (cube, initialVertices, pickedFace, extrusionLength) => {
+const performExtrusion  = (cube, initialVertices, pickedFace, extrusionLength, distanceBetweenOppositeFaces) => {
     let currentVertices = initialVertices.slice();
-    let axis = (Math.floor(pickedFace/2) + 2) % 3; // Add two to correct picked axis.
+    let axis = (Math.floor(pickedFace/2) + 2) % 3;
+    if(isLimit(distanceBetweenOppositeFaces, pickedFace, extrusionLength)){
+        return;
+    }
     for(let i = 0; i < faceNoToVerticesMapping[pickedFace].length; i++){
         currentVertices[faceNoToVerticesMapping[pickedFace][i]* 3 + axis] += extrusionLength;
     }
     cube.updateVerticesData(BABYLON.VertexBuffer.PositionKind, currentVertices);
     return cube;
+}
+
+const isLimit = (distanceBetweenOppositeFaces, pickedFace, extrusionLength) => {
+    if(pickedFace == 0 || pickedFace == 2 || pickedFace ==4){
+        return distanceBetweenOppositeFaces <= -1 * (extrusionLength);
+    }
+    return distanceBetweenOppositeFaces <= extrusionLength;
+}
+
+const calculateDistanceBetweenOppositeFaces = (pickedAxis, initialVertices) => {
+    const oppositeVertices = [[0,7], [0,1], [0,3]];
+    let sumOfSquare = 0;
+    for(let j = 0; j < 3; j++){
+        sumOfSquare += Math.pow(initialVertices[oppositeVertices[pickedAxis][0] * 3 + j] - initialVertices[oppositeVertices[pickedAxis][1] * 3 + j], 2) ;
+    }
+    return Math.sqrt(sumOfSquare);
 }
 
 const faceNoToVerticesMapping = [
@@ -79,4 +100,4 @@ const faceNoToVerticesMapping = [
 ];
 
 
-export {createCube, createButton, createTextBlock, calculateExtrusionDistance, computeNormalInCameraSpace, computeExtrusionLength, performExtrusion};
+export {createCube, createButton, createTextBlock, calculateExtrusionDistance, computeNormalInCameraSpace, computeExtrusionLength, calculateDistanceBetweenOppositeFaces, performExtrusion};
