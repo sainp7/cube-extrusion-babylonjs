@@ -51,7 +51,7 @@ window.addEventListener('DOMContentLoaded', function () {
         scene.onPointerMove = (evt, pickingInfo) =>{
             if(pickedFace != null){
                 let extrusionLength =  computeExtrusionLength(initialPointerX, scene.pointerX, 
-                    initialPointerY, scene.pointerY, cameraSpaceNormal, pickedFace);
+                    initialPointerY, scene.pointerY, cameraSpaceNormal);
                 performExtrusion(cube, initialVertices, pickedFace, extrusionLength, distanceBetweenOppositeFaces);
                 textBlock.text= "Extrusion Length: " + extrusionLength;
             }

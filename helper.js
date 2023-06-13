@@ -51,34 +51,27 @@ const computeNormalInCameraSpace = (initialVertices, pickedFace, camera) => {
     return cameraSpaceNormal;
 }
 
-const computeExtrusionLength = (initialPointerX, currentPointerX, initialPointerY, currentPointerY, cameraSpaceNormal, pickedFace) => {
+const computeExtrusionLength = (initialPointerX, currentPointerX, initialPointerY, currentPointerY, cameraSpaceNormal) => {
     let deltaPointerX = (initialPointerX - currentPointerX) * 0.01;
     let deltaPointerY = (initialPointerY - currentPointerY) * 0.01;
     let extrusionLength = (deltaPointerX * cameraSpaceNormal._x + deltaPointerY * cameraSpaceNormal._y);
-    if( pickedFace === 0 || pickedFace === 2 || pickedFace === 4){
-         extrusionLength *= -1;
-    }
     return extrusionLength;
 }
 
 const performExtrusion  = (cube, initialVertices, pickedFace, extrusionLength, distanceBetweenOppositeFaces) => {
     let currentVertices = initialVertices.slice();
     let axis = (Math.floor(pickedFace/2) + 2) % 3;
-    if(isLimit(distanceBetweenOppositeFaces, pickedFace, extrusionLength)){
+    if(distanceBetweenOppositeFaces <= extrusionLength){
         return;
     }
+    if( pickedFace === 0 || pickedFace === 2 || pickedFace === 4){
+        extrusionLength *= -1;
+   }
     for(let i = 0; i < faceNoToVerticesMapping[pickedFace].length; i++){
         currentVertices[faceNoToVerticesMapping[pickedFace][i]* 3 + axis] += extrusionLength;
     }
     cube.updateVerticesData(BABYLON.VertexBuffer.PositionKind, currentVertices);
     return cube;
-}
-
-const isLimit = (distanceBetweenOppositeFaces, pickedFace, extrusionLength) => {
-    if(pickedFace == 0 || pickedFace == 2 || pickedFace ==4){
-        return distanceBetweenOppositeFaces <= -1 * (extrusionLength);
-    }
-    return distanceBetweenOppositeFaces <= extrusionLength;
 }
 
 const calculateDistanceBetweenOppositeFaces = (pickedAxis, initialVertices) => {
