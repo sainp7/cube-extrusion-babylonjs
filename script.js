@@ -33,7 +33,6 @@ window.addEventListener('DOMContentLoaded', function () {
     let initialVertices = null;
     let cameraSpaceNormal = null;
     let distanceBetweenOppositeFaces = null;
-    let currentVertexData = null;
     const init = () => {
         cube = createCube(scene);
         
@@ -54,7 +53,7 @@ window.addEventListener('DOMContentLoaded', function () {
             if(pickedFace != null){
                 let extrusionLength =  computeExtrusionLength(initialPointerX, scene.pointerX, 
                     initialPointerY, scene.pointerY, cameraSpaceNormal);
-                currentVertexData = performExtrusion(cube, initialVertices, pickedFace, extrusionLength, distanceBetweenOppositeFaces);
+                performExtrusion(cube, initialVertices, pickedFace, extrusionLength, distanceBetweenOppositeFaces);
                 textBlock.text= "Extrusion Length: " + extrusionLength;
             }
         }
