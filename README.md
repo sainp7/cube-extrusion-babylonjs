@@ -24,4 +24,4 @@ Code Explanation:
    1. Vertices data of the cube is an array of 72 floating point numbers, this is because a cube in babylonjs is made up of 6 faces (plane mesh) and each face has 4 vertices. Therefore, we get a 24 total vertices and each Vertex is denoted by 3 floating point number( X, Y and, Z) in 3D space.
    2. We require 12 vertices to perform extrusion on a face, 4 of that face and 2 each from it's neighbouring 4 faces. So, we have created a list that gives us indices of vertices that we need to translate in order to perform extrusion on that face.
 
-See it live: [babylonjs-playground](https://www.babylonjs-playground.com/#HV8MD9#1)
+See it live here: [babylonjs-playground](https://www.babylonjs-playground.com/#FE11CH)
