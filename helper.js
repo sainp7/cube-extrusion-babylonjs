@@ -3,7 +3,15 @@ const createCube = (scene) => {
         size: 1,
         updatable: true
    }, scene, true);
-   cube.actionManager = new BABYLON.ActionManager(scene);
+
+   let positions = cube.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+   let indices = cube.getIndices();
+   cube.dispose();
+   cube = new BABYLON.Mesh("box", scene);
+   let vertexData = new BABYLON.VertexData();
+   vertexData.positions = positions;
+   vertexData.indices = indices;	
+   vertexData.applyToMesh(cube);
    return cube;
 }
 
@@ -45,33 +53,27 @@ const computeNormalInCameraSpace = (initialVertices, pickedFace, camera) => {
     let v2 = BABYLON.Vector3.FromArray(faceVertices, 3);
     let v3 = BABYLON.Vector3.FromArray(faceVertices, 6);
     let faceNormal = BABYLON.Vector3.Cross(v2.subtract(v1), v3.subtract(v1));
-    let cameraSpaceNormal = BABYLON.Vector3.TransformNormal(faceNormal, camera.getWorldMatrix().invert());
-    cameraSpaceNormal._x = Math.abs(cameraSpaceNormal._x) > 0.2 ? (-1) * cameraSpaceNormal._x : 0;
-    cameraSpaceNormal._y = Math.abs(cameraSpaceNormal._y) > 0.2 ? cameraSpaceNormal._y : 0;
+    let cameraSpaceNormal = BABYLON.Vector3.TransformNormal(faceNormal, camera.getWorldMatrix());
     return cameraSpaceNormal;
 }
 
 const computeExtrusionLength = (initialPointerX, currentPointerX, initialPointerY, currentPointerY, cameraSpaceNormal) => {
-    let deltaPointerX = (initialPointerX - currentPointerX) * 0.01;
-    let deltaPointerY = (initialPointerY - currentPointerY) * 0.01;
+    let deltaPointerX = (currentPointerX - initialPointerX) * 0.01;
+    let deltaPointerY = (currentPointerY - initialPointerY) * 0.01;
     let extrusionLength = (deltaPointerX * cameraSpaceNormal._x + deltaPointerY * cameraSpaceNormal._y);
     return extrusionLength;
 }
 
-const performExtrusion  = (cube, initialVertices, pickedFace, extrusionLength, distanceBetweenOppositeFaces) => {
+const performExtrusion  = (cube, initialVertices, pickedFace, indices, extrusionLength, distanceBetweenOppositeFaces) => {
     let currentVertices = initialVertices.slice();
     let axis = (Math.floor(pickedFace/2) + 2) % 3;
-    if(distanceBetweenOppositeFaces <= extrusionLength){
-        return;
-    }
-    if( pickedFace === 0 || pickedFace === 2 || pickedFace === 4){
-        extrusionLength *= -1;
-   }
-    for(let i = 0; i < faceNoToVerticesMapping[pickedFace].length; i++){
+    for(let i = 0; i < 12; i++){
         currentVertices[faceNoToVerticesMapping[pickedFace][i]* 3 + axis] += extrusionLength;
     }
-    cube.updateVerticesData(BABYLON.VertexBuffer.PositionKind, currentVertices);
-    return cube;
+    let vertexData = new BABYLON.VertexData();
+    vertexData.positions = currentVertices;
+    vertexData.indices = indices;
+    vertexData.applyToMesh(cube);
 }
 
 const calculateDistanceBetweenOppositeFaces = (pickedAxis, initialVertices) => {
@@ -83,6 +85,7 @@ const calculateDistanceBetweenOppositeFaces = (pickedAxis, initialVertices) => {
     return Math.sqrt(sumOfSquare);
 }
 
+//Do not edit order or alter this array
 const faceNoToVerticesMapping = [
     [0,1,2,3,10,11,12,13,16,19,20,23], // Face 0
     [4,5,6,7,8,9,14,15,17,18,21,22], //  Face 1
@@ -91,6 +94,5 @@ const faceNoToVerticesMapping = [
     [2,3,4,5,8,11,12,15,16,17,18,19], // Face 4
     [0,1,6,7,9,10,13,14,20,21,22,23] //Face 5
 ];
-
 
 export {createCube, createButton, createTextBlock, calculateExtrusionDistance, computeNormalInCameraSpace, computeExtrusionLength, calculateDistanceBetweenOppositeFaces, performExtrusion};

@@ -33,11 +33,12 @@ window.addEventListener('DOMContentLoaded', function () {
     let initialVertices = null;
     let cameraSpaceNormal = null;
     let distanceBetweenOppositeFaces = null;
+    let indices = null;
     const init = () => {
         cube = createCube(scene);
+        indices = cube.getIndices();
         
         scene.onPointerDown = (evt, pickingInfo) => {
-            console.log(pickingInfo.hit);
             if(pickingInfo.hit) {
                 pickedFace = Math.floor(pickingInfo.faceId/2);
                 camera.detachControl(canvas);
@@ -45,16 +46,23 @@ window.addEventListener('DOMContentLoaded', function () {
                 initialPointerY = scene.pointerY;
                 initialVertices = cube.getVerticesData(BABYLON.VertexBuffer.PositionKind);
                 cameraSpaceNormal = computeNormalInCameraSpace(initialVertices, pickedFace, camera);
-                distanceBetweenOppositeFaces  = calculateDistanceBetweenOppositeFaces(Math.floor(pickedFace/2), initialVertices);
+                distanceBetweenOppositeFaces = calculateDistanceBetweenOppositeFaces(Math.floor(pickedFace/2), initialVertices);
+                
             }
         }
         
-        scene.onPointerMove = () =>{
-            if(pickedFace != null){
+        scene.onPointerMove = () => {
+            if(pickedFace != null) {
                 let extrusionLength =  computeExtrusionLength(initialPointerX, scene.pointerX, 
                     initialPointerY, scene.pointerY, cameraSpaceNormal);
-                performExtrusion(cube, initialVertices, pickedFace, extrusionLength, distanceBetweenOppositeFaces);
-                textBlock.text= "Extrusion Length: " + extrusionLength;
+                if( pickedFace === 1 || pickedFace === 2 || pickedFace === 5){
+                    extrusionLength *= -1;
+                }
+                if(!(distanceBetweenOppositeFaces <= extrusionLength)){
+                    performExtrusion(cube, initialVertices, pickedFace, indices, extrusionLength, distanceBetweenOppositeFaces);
+                    textBlock.text = "Extrusion Length: " + extrusionLength;
+                }
+                
             }
         }
         
@@ -62,11 +70,6 @@ window.addEventListener('DOMContentLoaded', function () {
             if(pickedFace != null){
                 pickedFace = null;
                 camera.attachControl(canvas);
-                initialPointerX = null;
-                initialPointerY = null;
-                cameraSpaceNormal = null;
-                initialVertices = null;
-                distanceBetweenOppositeFaces = null;
             }
         }
     }    
