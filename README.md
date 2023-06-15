@@ -24,4 +24,8 @@ Code Explanation:
    1. Vertices data of the cube is an array of 72 floating point numbers, this is because a cube in babylonjs is made up of 6 faces (plane mesh) and each face has 4 vertices. Therefore, we get a 24 total vertices and each Vertex is denoted by 3 floating point number( X, Y and, Z) in 3D space.
    2. We require 12 vertices to perform extrusion on a face, 4 of that face and 2 each from it's neighbouring 4 faces. So, we have created a list that gives us indices of vertices that we need to translate in order to perform extrusion on that face.
 
+Limitations:
+1. Only works for non rotated cube. To make it work with rotated cube we need get the projection of extrusion length in all 3 axis and translate x, y and z co-ordinates of relevant vertices respectively. Then we'll need to make changes in computeNormalInCameraSpace function in helper.js.
+2. Faces along Z axis (i.e face 0 and face 1) doesn't move when aligned vertically(i.e. along Y axis). To fix this we need to debug the computeNormalInCameraSpace function in helper.js.
+
 See it live here: [babylonjs-playground](https://www.babylonjs-playground.com/#FE11CH)
