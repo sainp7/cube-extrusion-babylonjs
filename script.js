@@ -39,38 +39,40 @@ window.addEventListener('DOMContentLoaded', function () {
         indices = cube.getIndices();
         
         scene.onPointerDown = (evt, pickingInfo) => {
-            if(pickingInfo.hit) {
-                pickedFace = Math.floor(pickingInfo.faceId/2);
-                camera.detachControl(canvas);
-                initialPointerX = scene.pointerX;
-                initialPointerY = scene.pointerY;
-                initialVertices = cube.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-                cameraSpaceNormal = computeNormalInCameraSpace(initialVertices, pickedFace, camera);
-                distanceBetweenOppositeFaces = calculateDistanceBetweenOppositeFaces(Math.floor(pickedFace/2), initialVertices);
-                
+            if(!pickingInfo.hit) {
+                return;
             }
+            pickedFace = Math.floor(pickingInfo.faceId/2);
+            camera.detachControl(canvas);
+            initialPointerX = scene.pointerX;
+            initialPointerY = scene.pointerY;
+            initialVertices = cube.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+            cameraSpaceNormal = computeNormalInCameraSpace(initialVertices, pickedFace, camera);
+            distanceBetweenOppositeFaces = calculateDistanceBetweenOppositeFaces(Math.floor(pickedFace/2), initialVertices);
         }
         
         scene.onPointerMove = () => {
-            if(pickedFace != null) {
-                let extrusionLength =  computeExtrusionLength(initialPointerX, scene.pointerX, 
-                    initialPointerY, scene.pointerY, cameraSpaceNormal);
-                if( pickedFace === 1 || pickedFace === 2 || pickedFace === 5){
-                    extrusionLength *= -1;
-                }
-                if(!(distanceBetweenOppositeFaces <= extrusionLength)){
-                    performExtrusion(cube, initialVertices, pickedFace, indices, extrusionLength, distanceBetweenOppositeFaces);
-                    textBlock.text = "Extrusion Length: " + extrusionLength;
-                }
-                
+            if(pickedFace == null) {
+                return;
             }
+            let extrusionLength =  computeExtrusionLength(initialPointerX, scene.pointerX, 
+                initialPointerY, scene.pointerY, cameraSpaceNormal);
+            if( pickedFace === 1 || pickedFace === 2 || pickedFace === 5){
+                extrusionLength *= -1;
+            }
+            if(distanceBetweenOppositeFaces <= extrusionLength){
+                return;
+            }
+            performExtrusion(cube, initialVertices, pickedFace, indices, extrusionLength, distanceBetweenOppositeFaces);
+            textBlock.text = "Extrusion Length: " + extrusionLength;
         }
         
         scene.onPointerUp = () => {
-            if(pickedFace != null){
-                pickedFace = null;
-                camera.attachControl(canvas);
+            if(pickedFace == null){
+                return;
             }
+            pickedFace = null;
+            camera.attachControl(canvas);
         }
     }    
  
@@ -82,7 +84,6 @@ window.addEventListener('DOMContentLoaded', function () {
     });
     advancedTexture.addControl(resetButton);
 
-    
     init();
 
     engine.runRenderLoop(function () {
