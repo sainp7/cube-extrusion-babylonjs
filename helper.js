@@ -64,7 +64,7 @@ const computeExtrusionLength = (initialPointerX, currentPointerX, initialPointer
     return extrusionLength;
 }
 
-const performExtrusion  = (cube, initialVertices, pickedFace, indices, extrusionLength, distanceBetweenOppositeFaces) => {
+const performExtrusion  = (cube, initialVertices, pickedFace, indices, extrusionLength) => {
     let currentVertices = initialVertices.slice();
     let axis = (Math.floor(pickedFace/2) + 2) % 3;
     for(let i = 0; i < 12; i++){
@@ -85,6 +85,13 @@ const calculateDistanceBetweenOppositeFaces = (pickedAxis, initialVertices) => {
     return Math.sqrt(sumOfSquare);
 }
 
+const calculateActualExtrusionLength = (pickedFace,extrusionLength) =>{
+    if(pickedFace === 2 ||  pickedFace === 3){
+        return -1 * extrusionLength;
+    }
+    return extrusionLength;
+}
+
 //Do not edit order or alter this array
 const faceNoToVerticesMapping = [
     [0,1,2,3,10,11,12,13,16,19,20,23], // Face 0
@@ -95,4 +102,4 @@ const faceNoToVerticesMapping = [
     [0,1,6,7,9,10,13,14,20,21,22,23] //Face 5
 ];
 
-export {createCube, createButton, createTextBlock, calculateExtrusionDistance, computeNormalInCameraSpace, computeExtrusionLength, calculateDistanceBetweenOppositeFaces, performExtrusion};
+export {createCube, createButton, createTextBlock, calculateExtrusionDistance, computeNormalInCameraSpace, computeExtrusionLength, calculateDistanceBetweenOppositeFaces, performExtrusion, calculateActualExtrusionLength};
