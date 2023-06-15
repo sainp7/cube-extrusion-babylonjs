@@ -26,6 +26,6 @@ Code Explanation:
 
 Limitations:
 1. Only works for non rotated cube. To make it work with rotated cube we need get the projection of extrusion length in all 3 axis and translate x, y and z co-ordinates of relevant vertices respectively. Then we'll need to make changes in computeNormalInCameraSpace function in helper.js.
-2. Faces along Z axis (i.e face 0 and face 1) doesn't move when aligned vertically(i.e. along Y axis). To fix this we need to debug the computeNormalInCameraSpace function in helper.js.
+2. Faces along X axis (i.e face 2 and face 3) doesn't move when aligned vertically(i.e. along Y axis). To fix this we need to debug the computeNormalInCameraSpace function in helper.js.
 
-See it live here: [babylonjs-playground](https://www.babylonjs-playground.com/#FE11CH)
+See it live here: [babylonjs-playground](https://www.babylonjs-playground.com/#FE11CH#1)
