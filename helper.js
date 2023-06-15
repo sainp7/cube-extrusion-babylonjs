@@ -57,9 +57,12 @@ const computeNormalInCameraSpace = (initialVertices, pickedFace, camera) => {
     return cameraSpaceNormal;
 }
 
-const computeExtrusionLength = (initialPointerX, currentPointerX, initialPointerY, currentPointerY, cameraSpaceNormal) => {
+const computeExtrusionLength = (initialPointerX, currentPointerX, initialPointerY, currentPointerY, cameraSpaceNormal, pickedFace) => {
     let deltaPointerX = (currentPointerX - initialPointerX) * 0.01;
     let deltaPointerY = (currentPointerY - initialPointerY) * 0.01;
+    if(pickedFace === 1){ // To resolve unusual behavior
+        deltaPointerY *= -1;
+    }
     let extrusionLength = (deltaPointerX * cameraSpaceNormal._x + deltaPointerY * cameraSpaceNormal._y);
     return extrusionLength;
 }
@@ -76,7 +79,8 @@ const performExtrusion  = (cube, initialVertices, pickedFace, indices, extrusion
     vertexData.applyToMesh(cube);
 }
 
-const calculateDistanceBetweenOppositeFaces = (pickedAxis, initialVertices) => {
+const calculateDistanceBetweenOppositeFaces = (pickedFace, initialVertices) => {
+    let pickedAxis = Math.floor(pickedFace/2);
     const oppositeVertices = [[0,7], [0,1], [0,3]];
     let sumOfSquare = 0;
     for(let j = 0; j < 3; j++){

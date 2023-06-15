@@ -50,24 +50,20 @@ window.addEventListener('DOMContentLoaded', function () {
             initialPointerY = scene.pointerY;
             initialVertices = cube.getVerticesData(BABYLON.VertexBuffer.PositionKind);
             cameraSpaceNormal = computeNormalInCameraSpace(initialVertices, pickedFace, camera);
-            distanceBetweenOppositeFaces = calculateDistanceBetweenOppositeFaces(Math.floor(pickedFace/2), initialVertices);
+            distanceBetweenOppositeFaces = calculateDistanceBetweenOppositeFaces(pickedFace, initialVertices);
         }
         
         scene.onPointerMove = () => {
             if(pickedFace == null) {
                 return;
             }
-            let extrusionLength =  computeExtrusionLength(initialPointerX, scene.pointerX, initialPointerY, scene.pointerY, cameraSpaceNormal);
+            let extrusionLength =  computeExtrusionLength(initialPointerX, scene.pointerX, initialPointerY, scene.pointerY, cameraSpaceNormal, pickedFace);
             let actualExtrusionLength = calculateActualExtrusionLength(pickedFace, extrusionLength);
-            
-            if( pickedFace === 1 || pickedFace === 2 || pickedFace === 5){
-                extrusionLength *= -1;
-            }
+            extrusionLength = (pickedFace === 1 || pickedFace === 2 || pickedFace === 5) ? (-1) * extrusionLength : extrusionLength;
 
             if(distanceBetweenOppositeFaces + actualExtrusionLength <= 0){
                 return;
             }
-
             performExtrusion(cube, initialVertices, pickedFace, indices, extrusionLength);
             textBlock.text = "Extrusion Length: " + actualExtrusionLength;
         }
