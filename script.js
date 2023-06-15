@@ -1,6 +1,6 @@
 /// <reference path='./vendor/babylon.d.ts' />
 
-import {createCube ,createButton, createTextBlock, computeNormalInCameraSpace, computeExtrusionLength, calculateDistanceBetweenOppositeFaces, performExtrusion} from './helper.js';
+import {createCube ,createButton, createTextBlock, computeNormalInCameraSpace, computeExtrusionLength, calculateDistanceBetweenOppositeFaces, performExtrusion, calculateActualExtrusionLength} from './helper.js';
 
 window.addEventListener('DOMContentLoaded', function () {
     let canvas = document.getElementById("renderCanvas");
@@ -26,48 +26,54 @@ window.addEventListener('DOMContentLoaded', function () {
         BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP
     );
 
-    let cube = null;
+    let cube;
     let pickedFace = null;
-    let initialPointerX = null;
-    let initialPointerY = null;
-    let initialVertices = null;
-    let cameraSpaceNormal = null;
-    let distanceBetweenOppositeFaces = null;
+    let initialPointerX;
+    let initialPointerY;
+    let initialVertices;
+    let cameraSpaceNormal;
+    let distanceBetweenOppositeFaces;
+    let indices;
+
     const init = () => {
         cube = createCube(scene);
+        indices = cube.getIndices();
         
         scene.onPointerDown = (evt, pickingInfo) => {
-            console.log(pickingInfo.hit);
-            if(pickingInfo.hit) {
-                pickedFace = Math.floor(pickingInfo.faceId/2);
-                camera.detachControl(canvas);
-                initialPointerX = scene.pointerX;
-                initialPointerY = scene.pointerY;
-                initialVertices = cube.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-                cameraSpaceNormal = computeNormalInCameraSpace(initialVertices, pickedFace, camera);
-                distanceBetweenOppositeFaces  = calculateDistanceBetweenOppositeFaces(Math.floor(pickedFace/2), initialVertices);
+            if(!pickingInfo.hit) {
+                return;
             }
+            pickedFace = Math.floor(pickingInfo.faceId/2);
+            console.log(pickedFace);
+            camera.detachControl(canvas);
+            initialPointerX = scene.pointerX;
+            initialPointerY = scene.pointerY;
+            initialVertices = cube.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+            cameraSpaceNormal = computeNormalInCameraSpace(initialVertices, pickedFace, camera);
+            distanceBetweenOppositeFaces = calculateDistanceBetweenOppositeFaces(pickedFace, initialVertices);
         }
         
-        scene.onPointerMove = () =>{
-            if(pickedFace != null){
-                let extrusionLength =  computeExtrusionLength(initialPointerX, scene.pointerX, 
-                    initialPointerY, scene.pointerY, cameraSpaceNormal);
-                performExtrusion(cube, initialVertices, pickedFace, extrusionLength, distanceBetweenOppositeFaces);
-                textBlock.text= "Extrusion Length: " + extrusionLength;
+        scene.onPointerMove = () => {
+            if(pickedFace == null) {
+                return;
             }
+            let extrusionLength =  computeExtrusionLength(initialPointerX, scene.pointerX, initialPointerY, scene.pointerY, cameraSpaceNormal, pickedFace);
+            let actualExtrusionLength = calculateActualExtrusionLength(pickedFace, extrusionLength);
+            extrusionLength = (pickedFace === 1 || pickedFace === 2 || pickedFace === 5) ? (-1) * extrusionLength : extrusionLength;
+
+            if(distanceBetweenOppositeFaces + actualExtrusionLength <= 0){
+                return;
+            }
+            performExtrusion(cube, initialVertices, pickedFace, indices, extrusionLength);
+            textBlock.text = "Extrusion Length: " + actualExtrusionLength;
         }
         
         scene.onPointerUp = () => {
-            if(pickedFace != null){
-                pickedFace = null;
-                camera.attachControl(canvas);
-                initialPointerX = null;
-                initialPointerY = null;
-                cameraSpaceNormal = null;
-                initialVertices = null;
-                distanceBetweenOppositeFaces = null;
+            if(pickedFace == null){
+                return;
             }
+            pickedFace = null;
+            camera.attachControl(canvas);
         }
     }    
  
@@ -79,7 +85,6 @@ window.addEventListener('DOMContentLoaded', function () {
     });
     advancedTexture.addControl(resetButton);
 
-    
     init();
 
     engine.runRenderLoop(function () {
